@@ -45,7 +45,7 @@ type Config struct {
 		CreateUserWithoutAccessToken bool   `yaml:"create_user_without_access_token" default:"false"`
 		UseSeparateAppTables         bool   `yaml:"use_separate_app_tables" default:"false"`
 		UserRecordSchema             string `yaml:"user_record_schema"`
-                DisableAudit                 bool   `yaml:"disable_audit" default:"false"`
+		DisableAudit                 bool   `yaml:"disable_audit" default:"false"`
 		AdminEmail                   string `yaml:"admin_email" envconfig:"ADMIN_EMAIL"`
 		ListUsers                    bool   `yaml:"list_users" default:"false"`
 	}
@@ -197,6 +197,8 @@ func (e mainEnv) setupRouter() *httprouter.Router {
 	router.GET("/v1/user/:mode/:identity", e.userGet)
 	router.DELETE("/v1/user/:mode/:identity", e.userDelete)
 	router.PUT("/v1/user/:mode/:identity", e.userChange)
+	router.POST("/v1/user/userGet", e.userGetHandler)
+	// router.POST("/v1/user/userChange", e.userChangeHandler)
 
 	router.GET("/v1/prelogin/:mode/:identity/:code/:captcha", e.userPrelogin)
 	router.GET("/v1/login/:mode/:identity/:tmp", e.userLogin)
