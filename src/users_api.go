@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -81,9 +82,9 @@ func (e mainEnv) userCreate(w http.ResponseWriter, r *http.Request, ps httproute
 		}
 	}
 	if len(parsedData.loginIdx) == 0 &&
-	   len(parsedData.emailIdx) == 0 &&
-	   len(parsedData.phoneIdx) == 0 &&
-	   len(parsedData.customIdx) == 0 {
+		len(parsedData.emailIdx) == 0 &&
+		len(parsedData.phoneIdx) == 0 &&
+		len(parsedData.customIdx) == 0 {
 		returnError(w, r, "failed to create user, all user lookup fields are missing", 405, err, event)
 		return
 	}
@@ -121,11 +122,28 @@ func (e mainEnv) userCreate(w http.ResponseWriter, r *http.Request, ps httproute
 	return
 }
 
+func (e mainEnv) userGetHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var bodyInput struct {
+		Mode     string `json:"mode"`
+		Identity string `json:"identity"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&bodyInput)
+	if err != nil {
+		returnError(w, r, "bad request", 403, err, nil)
+		return
+	}
+	e.doUserGet(w, r, bodyInput.Mode, bodyInput.Identity)
+}
+
 func (e mainEnv) userGet(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var err error
-	var resultJSON []byte
 	identity := ps.ByName("identity")
 	mode := ps.ByName("mode")
+	e.doUserGet(w, r, mode, identity)
+}
+
+func (e mainEnv) doUserGet(w http.ResponseWriter, r *http.Request, mode, identity string) {
+	var err error
+	var resultJSON []byte
 	event := audit("get user record by "+mode, identity, mode, identity)
 	defer func() { event.submit(e.db, e.conf) }()
 	if validateMode(mode) == false {
